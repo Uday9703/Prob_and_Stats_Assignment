@@ -1,0 +1,137 @@
+---
+title: "Exploratory Data Analysis"
+author: "Uday_Mani_Sai_1002158538"
+date: "2023-09-30"
+output: html_document
+---
+
+
+
+
+```{r}
+library(aqp)
+library(dplyr)
+library(soilDB)
+library(ggplot2)
+library(tidyr)
+library(corrplot)
+```
+
+
+**Loading the Data**
+
+```{r}
+data <- read.csv("C:/Users/akhil/OneDrive/Desktop/Uday's_EDA_R/Fish.csv")
+
+#Printing first 6 rows of the data
+head(data)
+
+#printing the last 6 rows of the data
+tail(data)
+```
+
+**Summary of the Data**
+
+```{r}
+#Summary of the Statistics of Data
+summary(data)
+
+#Structure of the Data
+str(data)
+
+#number of rows and data
+nrow(data)
+ncol(data)
+```
+
+**Checking for the Null Values**
+
+```{r}
+null_values <- apply(is.na(data), 2, function(x) sum(x))
+
+null_values
+```
+
+**Checking for the Unique Values in Few Columns**
+
+
+```{r}
+unique(data)
+```
+
+**Identifying the Shape of the Data**
+
+
+```{r}
+df <- gather(data, key = "Variable", value = "Value", -Species)
+boxplot_all <- ggplot(df, aes(x = Variable, y = Value, fill = Species)) +
+  geom_boxplot() 
+boxplot_all
+
+ggplot(data, aes(x = Species, y = Height, fill = Species)) + geom_boxplot() 
+ggplot(data, aes(x = Species, y = Weight, fill = Species)) + geom_boxplot()
+ggplot(data, aes(x = Species, y = Length1, fill = Species)) + geom_boxplot() 
+ggplot(data, aes(x = Species, y = Length2, fill = Species)) + geom_boxplot() 
+ggplot(data, aes(x = Species, y = Length3, fill = Species)) + geom_boxplot()
+ggplot(data, aes(x = Species, y = Width, fill = Species)) + geom_boxplot() 
+
+#Bargraph based on Gender 
+ggplot(data, aes(x = Species,fill = Species)) +
+  geom_bar()
+
+ scatter_plot <- ggplot(data, aes(x = Length1, y = Weight,color = Species,width = 12)) +
+  geom_point()
+ scatter_plot
+
+```
+
+```{r}
+library(GGally)
+fig_width <- 16
+ggpairs(data , title = "Pair Plot of the Data",mapping = aes(color = Species),width = fig_width)
+```
+
+
+**Correlation**
+
+```{r}
+numeric_data <- data[, sapply(data, is.numeric)]
+cor_matrix <- cor(numeric_data)
+corrplot(cor_matrix)
+```
+
+**Finding Outliers**
+
+```{r}
+# Identify outliers for all columns using a custom function
+find_outliers <- function(column) {
+  q1 <- quantile(column, 0.25)
+  q3 <- quantile(column, 0.75)
+  iqr <- q3 - q1
+  lower_limit <- q1 - 1.5 * iqr
+  upper_limit <- q3 + 1.5 * iqr
+  return(column < lower_limit | column > upper_limit)
+}
+
+numeric_data <- data[, sapply(data, is.numeric)]
+
+# Apply the find_outliers function to all columns
+outliers <- numeric_data %>%
+  mutate(across(everything(), find_outliers))
+
+outliers_rows <- data %>%
+  filter(rowSums(outliers) > 0)
+
+outliers_rows
+
+data_clean <- data %>%
+  filter(rowSums(outliers) == 0)
+
+nrow(data_clean)
+ncol(data_clean)
+```
+
+
+
+
+
